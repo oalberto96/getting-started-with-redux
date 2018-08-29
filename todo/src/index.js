@@ -49,9 +49,42 @@ const todoApp = combineReducers({
 });
 
 const store = createStore(todoApp);
+
+const getVisibleTodos = (todos, filter) => {
+  switch (filter) {
+    case "SHOW_ALL":
+      return todos;
+    case "SHOW_COMPLETED":
+      return todos.filter(t => t.completed);
+    case "SHOW_ACTIVE":
+      return todos.filter(t => !t.completed);
+  }
+};
+
+const FilterLink = ({ filter, currentFilter, children }) => {
+  return filter === currentFilter ? (
+    <span>{children}</span>
+  ) : (
+    <a
+      href="#"
+      onClick={e => {
+        e.preventDefault();
+        store.dispatch({
+          type: "SET_VISIBILITY_FILTER",
+          filter
+        });
+      }}
+    >
+      {children}
+    </a>
+  );
+};
+
 let nextTodoId = 0;
 class TodoApp extends React.Component {
   render() {
+    const { todos, visibilityFilter } = this.props;
+    const visibleTodos = getVisibleTodos(todos, visibilityFilter);
     return (
       <div>
         <input
@@ -72,7 +105,7 @@ class TodoApp extends React.Component {
           Add todo
         </button>
         <ul>
-          {this.props.todos.map(todo => (
+          {visibleTodos.map(todo => (
             <li
               key={todo.id}
               onClick={() => {
@@ -86,6 +119,21 @@ class TodoApp extends React.Component {
             </li>
           ))}
         </ul>
+        <p>
+          Show:{" "}
+          <FilterLink currentFilter={visibilityFilter} filter="SHOW_ALL">
+            {" "}
+            All
+          </FilterLink>
+          <FilterLink currentFilter={visibilityFilter} filter="SHOW_ACTIVE">
+            {" "}
+            Active
+          </FilterLink>
+          <FilterLink currentFilter={visibilityFilter} filter="SHOW_COMPLETED">
+            {" "}
+            Completed
+          </FilterLink>
+        </p>
       </div>
     );
   }
@@ -93,7 +141,7 @@ class TodoApp extends React.Component {
 
 const render = () => {
   ReactDOM.render(
-    <TodoApp todos={store.getState().todos} />,
+    <TodoApp {...store.getState()} />,
     document.getElementById("root")
   );
 };

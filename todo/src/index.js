@@ -50,6 +50,25 @@ const todoApp = combineReducers({
 
 const store = createStore(todoApp);
 
+const Todo = ({ onClick, completed, text }) => (
+  <li
+    onClick={onClick}
+    style={{
+      textDecoration: completed ? "line-through" : "none"
+    }}
+  >
+    {text}
+  </li>
+);
+
+const TodoList = ({ todos, onTodoClick }) => (
+  <ul>
+    {todos.map(todo => (
+      <Todo key={todo.id} {...todo} onClick={() => onTodoClick(todo.id)} />
+    ))}
+  </ul>
+);
+
 const getVisibleTodos = (todos, filter) => {
   switch (filter) {
     case "SHOW_ALL":
@@ -104,21 +123,15 @@ class TodoApp extends React.Component {
         >
           Add todo
         </button>
-        <ul>
-          {visibleTodos.map(todo => (
-            <li
-              key={todo.id}
-              onClick={() => {
-                store.dispatch({ type: "TOGGLE_TODO", id: todo.id });
-              }}
-              style={{
-                textDecoration: todo.completed ? "line-through" : "none"
-              }}
-            >
-              {todo.text}
-            </li>
-          ))}
-        </ul>
+        <TodoList
+          todos={visibleTodos}
+          onTodoClick={id =>
+            store.dispatch({
+              type: "TOOGLE_TODO",
+              id
+            })
+          }
+        />
         <p>
           Show:{" "}
           <FilterLink currentFilter={visibilityFilter} filter="SHOW_ALL">

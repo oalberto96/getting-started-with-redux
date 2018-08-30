@@ -50,33 +50,11 @@ const todoApp = combineReducers({
 
 const store = createStore(todoApp);
 
-const Footer = ({ visibilityFilter, onFilterClick }) => (
+const Footer = () => (
   <p>
-    Show:{" "}
-    <FilterLink
-      currentFilter={visibilityFilter}
-      filter="SHOW_ALL"
-      onClick={onFilterClick}
-    >
-      {" "}
-      All
-    </FilterLink>
-    <FilterLink
-      currentFilter={visibilityFilter}
-      filter="SHOW_ACTIVE"
-      onClick={onFilterClick}
-    >
-      {" "}
-      Active
-    </FilterLink>
-    <FilterLink
-      currentFilter={visibilityFilter}
-      filter="SHOW_COMPLETED"
-      onClick={onFilterClick}
-    >
-      {" "}
-      Completed
-    </FilterLink>
+    Show: <FilterLink filter="SHOW_ALL"> All</FilterLink>
+    <FilterLink filter="SHOW_ACTIVE"> Active</FilterLink>
+    <FilterLink filter="SHOW_COMPLETED"> Completed</FilterLink>
   </p>
 );
 
@@ -132,21 +110,52 @@ const getVisibleTodos = (todos, filter) => {
   }
 };
 
-const FilterLink = ({ filter, currentFilter, children, onClick }) => {
-  return filter === currentFilter ? (
+const Link = ({ active, children, onClick }) => {
+  return active ? (
     <span>{children}</span>
   ) : (
     <a
       href="#"
       onClick={e => {
         e.preventDefault();
-        onClick(filter);
+        onClick();
       }}
     >
       {children}
     </a>
   );
 };
+
+class FilterLink extends React.Component {
+  componentDidMount() {
+    this.unsubscribe = store.subscribe(() => {
+      this.forceUpdate();
+    });
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe();
+  }
+
+  render() {
+    const props = this.props;
+    const state = store.getState();
+
+    return (
+      <Link
+        active={props.filter === state.visibilityFilter}
+        onClick={() =>
+          store.dispatch({
+            type: "SET_VISIBILITY_FILTER",
+            filter: props.filter
+          })
+        }
+      >
+        {props.children}
+      </Link>
+    );
+  }
+}
 
 let nextTodoId = 0;
 const TodoApp = ({ todos, visibilityFilter }) => (
@@ -169,15 +178,7 @@ const TodoApp = ({ todos, visibilityFilter }) => (
         })
       }
     />
-    <Footer
-      visibilityFilter={visibilityFilter}
-      onFilterClick={filter =>
-        store.dispatch({
-          type: "SET_VISIBILITY_FILTER",
-          filter
-        })
-      }
-    />
+    <Footer />
   </div>
 );
 
